@@ -12,14 +12,15 @@ const welcome = document.getElementById('welcome');
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 
-const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.35));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x000000, 0);
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.12;
-renderer.shadowMap.enabled = false;
+renderer.toneMappingExposure = 1.18;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.domElement.id = 'c';
 stage.appendChild(renderer.domElement);
 
@@ -28,26 +29,34 @@ const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerH
 camera.position.set(START.position[0], START.position[1], START.position[2]);
 
 const playback = createPlayback(cssMount);
-const room = buildRoom(scene);
-const machines = buildMachines(scene);
-machines.list.forEach(function (cabinet) {
-  playback.attach(cabinet.spec, cabinet.anchor, cabinet.idle);
-});
-
-const colliders = room.colliders.concat(machines.colliders);
-const controls = createControls(camera, renderer.domElement, colliders, room.bounds);
-
-const dx = START.lookAt[0] - START.position[0];
-const dy = START.lookAt[1] - START.position[1];
-const dz = START.lookAt[2] - START.position[2];
-controls.setLook(Math.atan2(-dx, -dz), Math.atan2(dy, Math.hypot(dx, dz)));
-
+let machines = null;
+let controls = null;
 let started = false;
 let last = performance.now();
 let hovered = null;
+let ready = false;
+
+function boot() {
+  const room = buildRoom(scene, renderer);
+  machines = buildMachines(scene);
+  machines.list.forEach(function (cabinet) {
+    playback.attach(cabinet.spec, cabinet.anchor, cabinet.idle);
+  });
+  const colliders = room.colliders.concat(machines.colliders);
+  controls = createControls(camera, renderer.domElement, colliders, room.bounds);
+  const dx = START.lookAt[0] - START.position[0];
+  const dy = START.lookAt[1] - START.position[1];
+  const dz = START.lookAt[2] - START.position[2];
+  controls.setLook(Math.atan2(-dx, -dz), Math.atan2(dy, Math.hypot(dx, dz)));
+  ready = true;
+  window.__arcadeReady = true;
+}
+
+const fontReady = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+fontReady.then(boot).catch(boot);
 
 function pick(clientX, clientY) {
-  if (!started || playback.active) return null;
+  if (!ready || !started || playback.active) return null;
   if (controls.locked) {
     pointer.set(0, 0);
   } else if (clientX == null) {
@@ -69,7 +78,7 @@ function setHover(machine) {
 }
 
 renderer.domElement.addEventListener('pointerdown', function (event) {
-  if (!started || event.button !== 0 || playback.active) return;
+  if (!ready || !started || event.button !== 0 || playback.active) return;
   const machine = pick(event.clientX, event.clientY);
   if (machine) {
     playback.play(machine);
@@ -80,11 +89,12 @@ renderer.domElement.addEventListener('pointerdown', function (event) {
 });
 
 renderer.domElement.addEventListener('pointermove', function (event) {
-  if (!started || controls.locked || playback.active) return;
+  if (!ready || !started || controls.locked || playback.active) return;
   setHover(pick(event.clientX, event.clientY));
 });
 
 document.getElementById('enter').addEventListener('click', function () {
+  if (!ready) return;
   welcome.classList.add('hide');
   document.body.classList.add('started');
   started = true;
@@ -106,6 +116,10 @@ function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
+  if (!ready) {
+    renderer.render(scene, camera);
+    return;
+  }
   if (started) controls.update(dt);
   if (playback.active) prompt.hidden = true;
   else if (started && controls.locked) setHover(pick(null, null));
@@ -116,4 +130,3 @@ function frame(now) {
 }
 
 frame(last);
-window.__arcadeReady = true;
