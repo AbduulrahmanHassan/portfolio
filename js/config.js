@@ -4,7 +4,8 @@
 // Leave it blank rather than guessing a project name.
 //
 // Vimeo: set each video to Unlisted or Embed only (not Private), allow embeds
-// on your Vercel domain, and paste the Share → Embed `h=` value into `hash`.
+// on https://portfolio-gules-rho-14.vercel.app (and any custom domain), and
+// paste the Share → Embed `h=` value into `hash`.
 // Without that, Vimeo shows "Sign in to watch this video".
 
 export const ROOM = {
