@@ -81,12 +81,13 @@ export function createPlayback(cssMount) {
     screen.iframe.style.pointerEvents = 'auto';
     active = machine;
     document.body.classList.add('playing');
-    if (document.exitPointerLock) document.exitPointerLock();
     titleEl.textContent = machine.title || '';
     titleEl.hidden = !machine.title;
     exitEl.hidden = false;
     sync();
   }
+
+  let onStop = null;
 
   function stop() {
     if (!active) return;
@@ -109,6 +110,7 @@ export function createPlayback(cssMount) {
     document.body.classList.remove('playing');
     titleEl.hidden = true;
     exitEl.hidden = true;
+    if (onStop) onStop();
   }
 
   exitEl.addEventListener('click', function (event) {
@@ -126,6 +128,7 @@ export function createPlayback(cssMount) {
     resize: function () { renderer.setSize(window.innerWidth, window.innerHeight); },
     play: play,
     stop: stop,
+    setOnStop: function (fn) { onStop = fn; },
     get active() { return active; }
   };
 }

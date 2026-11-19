@@ -12,6 +12,8 @@ export function createControls(camera, canvas, colliders, bounds) {
   let dragging = false;
   let lastX = 0;
   let lastY = 0;
+  let enabled = true;
+  let ignoreLookUntil = 0;
 
   function setLook(yaw, pitch) {
     yawPitch.yaw = yaw;
@@ -28,7 +30,7 @@ export function createControls(camera, canvas, colliders, bounds) {
   }
 
   function tryLock() {
-    if (!canvas.requestPointerLock) return;
+    if (!enabled || !canvas.requestPointerLock) return;
     try {
       const pending = canvas.requestPointerLock();
       if (pending && pending.catch) pending.catch(function () {});
@@ -36,10 +38,17 @@ export function createControls(camera, canvas, colliders, bounds) {
   }
 
   document.addEventListener('pointerlockchange', function () {
+    const wasLocked = yawPitch.locked;
     yawPitch.locked = document.pointerLockElement === canvas;
+    // Unlocking often injects a huge mouse jump that pitches the camera down.
+    if (wasLocked && !yawPitch.locked) {
+      ignoreLookUntil = performance.now() + 250;
+      dragging = false;
+    }
   });
 
   window.addEventListener('keydown', function (event) {
+    if (!enabled) return;
     keys[event.code] = true;
     if (event.code.indexOf('Arrow') === 0 || event.code === 'Space') event.preventDefault();
   });
@@ -48,21 +57,23 @@ export function createControls(camera, canvas, colliders, bounds) {
   });
 
   document.addEventListener('mousemove', function (event) {
-    if (!yawPitch.locked) return;
+    if (!enabled || !yawPitch.locked) return;
+    if (performance.now() < ignoreLookUntil) return;
     yawPitch.yaw -= event.movementX * 0.0022;
     yawPitch.pitch -= event.movementY * 0.002;
     applyLook();
   });
 
   canvas.addEventListener('pointerdown', function (event) {
-    if (event.button !== 0) return;
+    if (!enabled || event.button !== 0) return;
     dragging = true;
     lastX = event.clientX;
     lastY = event.clientY;
   });
   window.addEventListener('pointerup', function () { dragging = false; });
   window.addEventListener('pointermove', function (event) {
-    if (!dragging || yawPitch.locked) return;
+    if (!enabled || !dragging || yawPitch.locked) return;
+    if (performance.now() < ignoreLookUntil) return;
     yawPitch.yaw -= (event.clientX - lastX) * 0.0032;
     yawPitch.pitch -= (event.clientY - lastY) * 0.0026;
     lastX = event.clientX;
@@ -93,6 +104,10 @@ export function createControls(camera, canvas, colliders, bounds) {
   }
 
   function update(dt) {
+    if (!enabled) {
+      applyLook();
+      return;
+    }
     const forward = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);
     const strafe = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0);
     const sin = Math.sin(yawPitch.yaw);
@@ -120,6 +135,15 @@ export function createControls(camera, canvas, colliders, bounds) {
     update: update,
     setLook: setLook,
     tryLock: tryLock,
+    setEnabled: function (value) {
+      enabled = !!value;
+      if (!enabled) {
+        dragging = false;
+        velocity.set(0, 0, 0);
+        Object.keys(keys).forEach(function (code) { keys[code] = false; });
+        ignoreLookUntil = performance.now() + 250;
+      }
+    },
     get locked() { return yawPitch.locked; }
   };
 }

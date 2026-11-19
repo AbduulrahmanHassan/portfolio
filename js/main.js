@@ -14,6 +14,7 @@ const loader = document.getElementById('loader');
 const loaderMsg = document.getElementById('loader-msg');
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
+const faceTarget = new THREE.Vector3();
 
 const maxDpr = Math.min(1.5, window.devicePixelRatio || 1);
 
@@ -79,11 +80,26 @@ function boot() {
   const dz = START.lookAt[2] - START.position[2];
   controls.setLook(Math.atan2(-dx, -dz), Math.atan2(dy, Math.hypot(dx, dz)));
   contactUi.setOnClose(function () {
-    // Return focus to the room after closing the hub.
+    controls.setEnabled(true);
+  });
+  playback.setOnStop(function () {
+    controls.setEnabled(true);
   });
   ready = true;
   window.__arcadeReady = true;
   finishLoader();
+}
+
+function faceMachine(machine) {
+  if (!machines || !controls) return;
+  const cabinet = machines.list.find(function (item) { return item.spec.id === machine.id; });
+  if (!cabinet) return;
+  cabinet.anchor.updateWorldMatrix(true, false);
+  cabinet.anchor.getWorldPosition(faceTarget);
+  const dx = faceTarget.x - camera.position.x;
+  const dy = faceTarget.y - camera.position.y;
+  const dz = faceTarget.z - camera.position.z;
+  controls.setLook(Math.atan2(-dx, -dz), Math.atan2(dy, Math.hypot(dx, dz)));
 }
 
 const fontReady = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
@@ -132,11 +148,16 @@ renderer.domElement.addEventListener('pointerdown', function (event) {
   if (!ready || !started || event.button !== 0 || playback.active || contactUi.open) return;
   const result = pick(event.clientX, event.clientY);
   if (result && result.type === 'hub') {
+    controls.setEnabled(false);
+    if (document.exitPointerLock) document.exitPointerLock();
     contactUi.show();
     setHover(null);
     return;
   }
   if (result && result.type === 'machine' && result.machine) {
+    faceMachine(result.machine);
+    controls.setEnabled(false);
+    if (document.exitPointerLock) document.exitPointerLock();
     playback.play(result.machine);
     setHover(null);
     return;
