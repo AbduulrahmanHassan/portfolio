@@ -12,27 +12,26 @@ const welcome = document.getElementById('welcome');
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x000000, 0);
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.22;
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMappingExposure = 1.12;
+renderer.shadowMap.enabled = false;
 renderer.domElement.id = 'c';
 stage.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.08, 40);
+const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 28);
 camera.position.set(START.position[0], START.position[1], START.position[2]);
 
 const playback = createPlayback(cssMount);
-const room = buildRoom(scene, renderer);
+const room = buildRoom(scene);
 const machines = buildMachines(scene);
 machines.list.forEach(function (cabinet) {
-  playback.attach(cabinet.spec, cabinet.anchor);
+  playback.attach(cabinet.spec, cabinet.anchor, cabinet.idle);
 });
 
 const colliders = room.colliders.concat(machines.colliders);
@@ -66,8 +65,7 @@ function pick(clientX, clientY) {
 
 function setHover(machine) {
   hovered = machine;
-  const show = !!(machine && !playback.active);
-  prompt.hidden = !show;
+  prompt.hidden = !(machine && !playback.active);
 }
 
 renderer.domElement.addEventListener('pointerdown', function (event) {

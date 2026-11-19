@@ -2,6 +2,10 @@
 // Order from the entrance: front-left, back-left, back-right, front-right.
 // Set `title` to show a label while that machine's video plays.
 // Leave it blank rather than guessing a project name.
+//
+// Vimeo: set each video to Unlisted or Embed only (not Private), allow embeds
+// on your Vercel domain, and paste the Share → Embed `h=` value into `hash`.
+// Without that, Vimeo shows "Sign in to watch this video".
 
 export const ROOM = {
   width: 8.8,
@@ -34,6 +38,7 @@ export const MACHINES = [
     id: '1',
     title: '',
     vimeoId: '1227963361',
+    hash: '',
     neon: cyan,
     position: [-3.05, 0, 0.2],
     rotation: 0.68
@@ -42,6 +47,7 @@ export const MACHINES = [
     id: '2',
     title: '',
     vimeoId: '1227963360',
+    hash: '',
     neon: cyan,
     position: [-1.85, 0, -1.45],
     rotation: 0.42
@@ -50,6 +56,7 @@ export const MACHINES = [
     id: '3',
     title: '',
     vimeoId: '1227959277',
+    hash: '',
     neon: pink,
     position: [1.85, 0, -1.45],
     rotation: -0.42
@@ -58,21 +65,23 @@ export const MACHINES = [
     id: '4',
     title: '',
     vimeoId: '1227961050',
+    hash: '',
     neon: pink,
     position: [3.05, 0, 0.2],
     rotation: -0.68
   }
 ];
 
-export function vimeoSrc(vimeoId, autoplay) {
+export function vimeoSrc(machine, autoplay) {
   const query = new URLSearchParams({
     title: '0',
     byline: '0',
     portrait: '0',
-    dnt: '1',
     autopause: '0',
     playsinline: '1',
+    transparent: '0',
     autoplay: autoplay ? '1' : '0'
   });
-  return 'https://player.vimeo.com/video/' + vimeoId + '?' + query.toString();
+  if (machine.hash) query.set('h', machine.hash);
+  return 'https://player.vimeo.com/video/' + machine.vimeoId + '?' + query.toString();
 }
