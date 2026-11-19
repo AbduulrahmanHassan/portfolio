@@ -12,13 +12,13 @@ export const CONTACT = {
   linkedin: 'https://www.linkedin.com/in/abdelrahman-hassan-23a932249',
 
   // e.g. '+2010xxxxxxxx'
-  phone: '',
+  phone: '+201553396553',
 
-  // Digits only, e.g. '2010xxxxxxxx'
-  whatsapp: '',
+  // Digits only with country code for wa.me
+  whatsapp: '201553396553',
 
   // e.g. 'you@gmail.com'
-  email: '',
+  email: 'abdalrahmanhassan13@gmail.com',
 
   github: 'https://github.com/AbduulrahmanHassan',
 

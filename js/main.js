@@ -15,26 +15,24 @@ const loaderMsg = document.getElementById('loader-msg');
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 
-const isMobile = matchMedia('(max-width: 900px), (pointer: coarse)').matches;
-const maxDpr = isMobile ? 1 : 1.15;
+const maxDpr = 1;
 
 const renderer = new THREE.WebGLRenderer({
   antialias: false,
   alpha: true,
   powerPreference: 'high-performance'
 });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDpr));
+renderer.setPixelRatio(1);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x000000, 0);
 renderer.outputEncoding = THREE.sRGBEncoding;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.1;
+renderer.toneMapping = THREE.NoToneMapping;
 renderer.shadowMap.enabled = false;
 renderer.domElement.id = 'c';
 stage.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.12, 22);
+const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.15, 20);
 camera.position.set(START.position[0], START.position[1], START.position[2]);
 
 const playback = createPlayback(cssMount);
@@ -63,7 +61,7 @@ function finishLoader() {
 
 function boot() {
   setLoader('Building arcade…');
-  const room = buildRoom(scene, renderer);
+  const room = buildRoom(scene);
   setLoader('Placing machines…');
   machines = buildMachines(scene);
   machines.list.forEach(function (cabinet) {
@@ -168,7 +166,7 @@ window.addEventListener('keydown', function (event) {
 window.addEventListener('resize', function () {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDpr));
+  renderer.setPixelRatio(maxDpr);
   renderer.setSize(window.innerWidth, window.innerHeight);
   playback.resize();
 });

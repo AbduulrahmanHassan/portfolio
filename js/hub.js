@@ -1,57 +1,62 @@
 import * as THREE from 'three';
+import { ROOM } from './config.js';
 import { CONTACT, contactLinks } from './contact.js';
 
-function neonMat(hex, intensity) {
-  const color = new THREE.Color(hex);
-  return new THREE.MeshStandardMaterial({
-    color: color,
-    emissive: color,
-    emissiveIntensity: intensity == null ? 2 : intensity,
-    roughness: 0.4,
-    metalness: 0.05
-  });
-}
-
-function drawScreen() {
+function drawWallScreen() {
   const canvas = document.createElement('canvas');
-  canvas.width = 512;
+  canvas.width = 1536;
   canvas.height = 384;
   const ctx = canvas.getContext('2d');
-  const g = ctx.createLinearGradient(0, 0, 0, 384);
-  g.addColorStop(0, '#1a1230');
-  g.addColorStop(1, '#08060e');
+  const g = ctx.createLinearGradient(0, 0, 1536, 0);
+  g.addColorStop(0, '#1a1028');
+  g.addColorStop(0.5, '#2a1848');
+  g.addColorStop(1, '#1a1028');
   ctx.fillStyle = g;
-  ctx.fillRect(0, 0, 512, 384);
+  ctx.fillRect(0, 0, 1536, 384);
+
   ctx.strokeStyle = '#ff4ad8';
-  ctx.lineWidth = 6;
+  ctx.lineWidth = 10;
   ctx.shadowColor = '#ff4ad8';
-  ctx.shadowBlur = 14;
-  ctx.strokeRect(18, 18, 476, 348);
+  ctx.shadowBlur = 16;
+  ctx.strokeRect(18, 18, 1500, 348);
+
   ctx.shadowBlur = 0;
+  ctx.textAlign = 'left';
   ctx.fillStyle = '#ff4ad8';
-  ctx.font = '800 36px Orbitron, Montserrat, Arial, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('CONTACT HUB', 256, 120);
-  ctx.fillStyle = 'rgba(255,255,255,0.85)';
-  ctx.font = '600 22px Montserrat, Arial, sans-serif';
-  ctx.fillText('CLICK TO OPEN', 256, 190);
-  ctx.fillStyle = 'rgba(255,255,255,0.55)';
-  ctx.font = '500 16px Montserrat, Arial, sans-serif';
-  ctx.fillText(CONTACT.name || 'Portfolio', 256, 250);
+  ctx.font = '800 72px Orbitron, Montserrat, Arial, sans-serif';
+  ctx.fillText('CONTACT', 64, 130);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '700 40px Montserrat, Arial, sans-serif';
+  ctx.fillText(CONTACT.name || 'Abdelrahman Hassan', 64, 200);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.font = '600 26px Montserrat, Arial, sans-serif';
+  ctx.fillText(CONTACT.role || '', 64, 250);
+
+  ctx.textAlign = 'right';
+  ctx.fillStyle = '#3ad7ff';
+  ctx.font = '700 48px Montserrat, Arial, sans-serif';
+  ctx.fillText('CLICK TO OPEN', 1472, 160);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.45)';
+  ctx.font = '500 24px Montserrat, Arial, sans-serif';
+  ctx.fillText('LinkedIn · Phone · WhatsApp · Email · GitHub · Behance', 1472, 230);
+
   const texture = new THREE.CanvasTexture(canvas);
   texture.encoding = THREE.sRGBEncoding;
   return texture;
 }
 
+// Large contact billboard on the back wall — visible from the entrance.
 export function buildContactHub(scene) {
   const group = new THREE.Group();
-  // Larger kiosk, easier to find from the entrance.
-  group.position.set(1.55, 0, -2.35);
-  group.rotation.y = -0.42;
+  const halfD = ROOM.depth / 2;
+  // Wide screen just above cabinet tops so the full wall width reads from the entrance.
+  group.position.set(0, 2.28, -halfD + 0.14);
 
-  const body = new THREE.MeshStandardMaterial({ color: 0x14141c, roughness: 0.7, metalness: 0.25 });
-  const dark = new THREE.MeshStandardMaterial({ color: 0x0a0a10, roughness: 0.85, metalness: 0.1 });
-  const neon = neonMat('#ff4ad8', 2.2);
+  const neon = new THREE.MeshBasicMaterial({ color: 0xff4ad8 });
+  const frameMat = new THREE.MeshBasicMaterial({ color: 0x121018 });
   const targets = [];
 
   function solid(w, h, d, material, x, y, z) {
@@ -63,23 +68,23 @@ export function buildContactHub(scene) {
     return mesh;
   }
 
-  solid(0.95, 1.35, 0.5, body, 0, 0.7, 0);
-  solid(1.02, 0.1, 0.56, body, 0, 1.42, 0.02);
-  solid(0.1, 0.95, 0.1, neon, -0.44, 0.85, 0.22);
-  solid(0.1, 0.95, 0.1, neon, 0.44, 0.85, 0.22);
-  solid(0.92, 0.05, 0.05, neon, 0, 1.5, 0.24);
+  // Near wall-width monitor (~7.6 × 0.9 m).
+  const sw = 7.6;
+  const sh = 0.9;
+  solid(sw, sh, 0.07, frameMat, 0, 0, 0);
+  solid(sw + 0.12, 0.07, 0.08, neon, 0, sh / 2 + 0.02, 0.02);
+  solid(sw + 0.12, 0.07, 0.08, neon, 0, -sh / 2 - 0.02, 0.02);
+  solid(0.07, sh + 0.14, 0.08, neon, -sw / 2 - 0.02, 0, 0.02);
+  solid(0.07, sh + 0.14, 0.08, neon, sw / 2 + 0.02, 0, 0.02);
 
   const screen = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.78, 0.58),
-    new THREE.MeshBasicMaterial({ map: drawScreen() })
+    new THREE.PlaneGeometry(sw - 0.22, sh - 0.18),
+    new THREE.MeshBasicMaterial({ map: drawWallScreen() })
   );
-  screen.position.set(0, 0.95, 0.26);
+  screen.position.set(0, 0, 0.045);
   screen.userData.hub = true;
   group.add(screen);
   targets.push(screen);
-
-  solid(0.86, 0.66, 0.05, dark, 0, 0.95, 0.23);
-  solid(1.05, 0.1, 0.58, body, 0, 0.05, 0);
 
   scene.add(group);
 
@@ -87,15 +92,15 @@ export function buildContactHub(scene) {
     group: group,
     targets: targets,
     neon: neon,
-    collider: { x: 1.55, z: -2.35, r: 0.65 },
+    collider: { x: 0, z: -halfD + 0.55, r: 0.45 },
     setHover: function (on) {
-      neon.emissiveIntensity = on ? 3.5 : 2.2;
+      neon.color.set(on ? 0xffffff : 0xff4ad8);
     }
   };
 }
 
 function iconSvg(kind) {
-  const common = 'width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+  const common = 'width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
   if (kind === 'in') return '<svg ' + common + '><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 10v7M8 7v.01M12 17v-4.5a2.5 2.5 0 0 1 5 0V17"/></svg>';
   if (kind === 'phone') return '<svg ' + common + '><path d="M6 3h4l2 5-3 2a12 12 0 0 0 5 5l2-3 5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 4 5a2 2 0 0 1 2-2z"/></svg>';
   if (kind === 'wa') return '<svg ' + common + '><path d="M20 11.5A8.5 8.5 0 0 1 7 18L4 20l2-3a8.5 8.5 0 1 1 14-5.5z"/><path d="M9.5 10c.5 2 2.5 4 4.5 4.5l1.5-1.5 2 .5-.5 2A7 7 0 0 1 8 9.5l2-.5z"/></svg>';
@@ -122,17 +127,16 @@ export function createContactUi() {
 
   list.innerHTML = '';
   contactLinks().forEach(function (link) {
-    const a = document.createElement(link.missing ? 'div' : 'a');
-    a.className = 'contact-link' + (link.download ? ' is-cv' : '') + (link.missing ? ' is-missing' : '');
+    if (link.missing) return;
+    const a = document.createElement('a');
+    a.className = 'contact-link' + (link.download ? ' is-cv' : '');
     a.innerHTML = '<span class="ico">' + iconSvg(link.icon) + '</span><span class="txt">' + link.label + '</span>';
-    if (!link.missing) {
-      a.href = link.href;
-      if (link.external) {
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-      }
-      if (link.download) a.setAttribute('download', '');
+    a.href = link.href;
+    if (link.external) {
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
     }
+    if (link.download) a.setAttribute('download', '');
     list.appendChild(a);
   });
 

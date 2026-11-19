@@ -14,14 +14,7 @@ function addBox(parent, w, h, d, material, x, y, z) {
 }
 
 function neonMat(hex) {
-  const color = new THREE.Color(hex);
-  return new THREE.MeshStandardMaterial({
-    color: color,
-    emissive: color,
-    emissiveIntensity: 2.2,
-    roughness: 0.35,
-    metalness: 0.05
-  });
+  return new THREE.MeshBasicMaterial({ color: new THREE.Color(hex) });
 }
 
 function drawMarquee(spec) {
@@ -296,11 +289,11 @@ function buildCabinet(spec) {
   group.position.set(spec.position[0], spec.position[1], spec.position[2]);
   group.rotation.y = spec.rotation;
 
-  const bodyMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(spec.body), roughness: 0.72, metalness: 0.28 });
-  const accentMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(spec.accent), roughness: 0.8, metalness: 0.12 });
-  const panelMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(spec.panel), roughness: 0.42, metalness: 0.55 });
-  const bezelMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(spec.bezel), roughness: 0.38, metalness: 0.62 });
-  const darkMat = new THREE.MeshStandardMaterial({ color: 0x09090c, roughness: 0.9, metalness: 0.08 });
+  const bodyMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(spec.body) });
+  const accentMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(spec.accent) });
+  const panelMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(spec.panel) });
+  const bezelMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(spec.bezel) });
+  const darkMat = new THREE.MeshBasicMaterial({ color: 0x09090c });
   const neon = neonMat(spec.neon);
   const neonAlt = neonMat(spec.neonAlt);
   const neonParts = [neon, neonAlt];
@@ -331,7 +324,7 @@ function buildCabinet(spec) {
   [-1, 1].forEach(function (side) {
     const art = new THREE.Mesh(
       new THREE.PlaneGeometry(0.5, 1.35),
-      new THREE.MeshStandardMaterial({ map: sideMap, roughness: 0.65, metalness: 0.15 })
+      new THREE.MeshBasicMaterial({ map: sideMap })
     );
     art.position.set(side * 0.435, 1.15, -0.02);
     art.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
@@ -427,13 +420,7 @@ function buildCabinet(spec) {
   targets.push(stick);
   const ball = new THREE.Mesh(
     new THREE.SphereGeometry(0.034, 8, 6),
-    new THREE.MeshStandardMaterial({
-      color: new THREE.Color(spec.neon),
-      emissive: new THREE.Color(spec.neon),
-      emissiveIntensity: 0.55,
-      roughness: 0.32,
-      metalness: 0.2
-    })
+    new THREE.MeshBasicMaterial({ color: new THREE.Color(spec.neon) })
   );
   ball.position.set(-0.2, 0.14, 0.02);
   ball.userData.machine = spec;
@@ -449,13 +436,7 @@ function buildCabinet(spec) {
     const row = Math.floor(index / 3);
     const button = new THREE.Mesh(
       new THREE.CylinderGeometry(0.024, 0.026, 0.02, 8),
-      new THREE.MeshStandardMaterial({
-        color: hex,
-        emissive: hex,
-        emissiveIntensity: 0.4,
-        roughness: 0.35,
-        metalness: 0.15
-      })
+      new THREE.MeshBasicMaterial({ color: hex })
     );
     button.position.set(0.02 + col * 0.075, 0.04, -0.02 + row * 0.085);
     button.userData.machine = spec;
@@ -475,6 +456,8 @@ function buildCabinet(spec) {
     idle: idle,
     targets: targets,
     neonParts: neonParts,
+    neonBase: new THREE.Color(spec.neon),
+    hoverColor: new THREE.Color(0xffffff),
     collider: { x: spec.position[0], z: spec.position[2], r: 0.52 }
   };
 }
@@ -490,13 +473,11 @@ export function buildMachines(scene) {
     list: built,
     targets: built.reduce(function (all, cabinet) { return all.concat(cabinet.targets); }, []),
     colliders: built.map(function (cabinet) { return cabinet.collider; }),
-    updateHover: function (id, dt) {
-      const blend = Math.min(1, dt * 8);
+    updateHover: function (id) {
       built.forEach(function (cabinet) {
         const on = cabinet.spec.id === id;
-        const glow = on ? 3.6 : 2.2;
         cabinet.neonParts.forEach(function (mat) {
-          mat.emissiveIntensity += (glow - mat.emissiveIntensity) * blend;
+          mat.color.copy(on ? cabinet.hoverColor : cabinet.neonBase);
         });
       });
     }
