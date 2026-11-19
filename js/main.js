@@ -15,24 +15,26 @@ const loaderMsg = document.getElementById('loader-msg');
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 
-const maxDpr = 1;
+const maxDpr = Math.min(1.5, window.devicePixelRatio || 1);
 
 const renderer = new THREE.WebGLRenderer({
-  antialias: false,
+  antialias: true,
   alpha: true,
   powerPreference: 'high-performance'
 });
-renderer.setPixelRatio(1);
+renderer.setPixelRatio(maxDpr);
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setClearColor(0x000000, 0);
+renderer.setClearColor(0x07060c, 1);
 renderer.outputEncoding = THREE.sRGBEncoding;
-renderer.toneMapping = THREE.NoToneMapping;
-renderer.shadowMap.enabled = false;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.domElement.id = 'c';
 stage.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.15, 20);
+const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.15, 28);
 camera.position.set(START.position[0], START.position[1], START.position[2]);
 
 const playback = createPlayback(cssMount);
@@ -116,10 +118,10 @@ function setHover(result) {
   hub.setHover(onHub);
   if (onHub) {
     prompt.hidden = false;
-    prompt.textContent = 'CLICK FOR CONTACT';
+    prompt.textContent = 'CLICK · OPEN CONTACT';
   } else if (machine && !playback.active) {
     prompt.hidden = false;
-    prompt.textContent = 'CLICK TO PLAY';
+    prompt.textContent = 'CLICK · PLAY  ' + String(machine.title).toUpperCase();
   } else {
     prompt.hidden = true;
   }

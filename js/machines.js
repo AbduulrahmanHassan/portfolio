@@ -14,7 +14,14 @@ function addBox(parent, w, h, d, material, x, y, z) {
 }
 
 function neonMat(hex) {
-  return new THREE.MeshBasicMaterial({ color: new THREE.Color(hex) });
+  const color = new THREE.Color(hex);
+  return new THREE.MeshStandardMaterial({
+    color: color,
+    emissive: color,
+    emissiveIntensity: 2.4,
+    roughness: 0.35,
+    metalness: 0.08
+  });
 }
 
 function drawMarquee(spec) {
@@ -40,7 +47,9 @@ function drawMarquee(spec) {
   ctx.shadowColor = spec.neon;
   ctx.shadowBlur = 16;
   const label = String(spec.title).toUpperCase();
-  ctx.font = label.length > 12 ? '800 54px Montserrat, Arial, sans-serif' : '800 64px Montserrat, Arial, sans-serif';
+  ctx.font = label.length > 12
+    ? '800 58px Orbitron, Montserrat, Arial, sans-serif'
+    : '800 72px Orbitron, Montserrat, Arial, sans-serif';
   ctx.fillText(label, 384, 96);
 
   if (spec.theme === 'factory') {
@@ -236,12 +245,15 @@ function drawIdle(spec) {
   ctx.fill();
 
   ctx.textAlign = 'center';
-  ctx.fillStyle = spec.neon;
+  ctx.fillStyle = '#ffffff';
   ctx.shadowColor = spec.neon;
-  ctx.shadowBlur = 12;
-  ctx.font = '700 22px Montserrat, Arial, sans-serif';
-  ctx.fillText(String(spec.title).toUpperCase(), 256, 278);
+  ctx.shadowBlur = 14;
+  ctx.font = '800 28px Orbitron, Montserrat, Arial, sans-serif';
+  ctx.fillText(String(spec.title).toUpperCase(), 256, 268);
   ctx.shadowBlur = 0;
+  ctx.fillStyle = spec.neon;
+  ctx.font = '700 18px Montserrat, Arial, sans-serif';
+  ctx.fillText('CLICK TO PLAY', 256, 304);
 
   if (spec.theme === 'factory') {
     ctx.strokeStyle = spec.neon;
@@ -289,11 +301,31 @@ function buildCabinet(spec) {
   group.position.set(spec.position[0], spec.position[1], spec.position[2]);
   group.rotation.y = spec.rotation;
 
-  const bodyMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(spec.body) });
-  const accentMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(spec.accent) });
-  const panelMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(spec.panel) });
-  const bezelMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(spec.bezel) });
-  const darkMat = new THREE.MeshBasicMaterial({ color: 0x09090c });
+  const bodyMat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(spec.body),
+    roughness: 0.68,
+    metalness: 0.32
+  });
+  const accentMat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(spec.accent),
+    roughness: 0.78,
+    metalness: 0.18
+  });
+  const panelMat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(spec.panel),
+    roughness: 0.4,
+    metalness: 0.55
+  });
+  const bezelMat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(spec.bezel),
+    roughness: 0.32,
+    metalness: 0.7
+  });
+  const darkMat = new THREE.MeshStandardMaterial({
+    color: 0x09090c,
+    roughness: 0.9,
+    metalness: 0.1
+  });
   const neon = neonMat(spec.neon);
   const neonAlt = neonMat(spec.neonAlt);
   const neonParts = [neon, neonAlt];
@@ -302,6 +334,8 @@ function buildCabinet(spec) {
   function solid(parent, w, h, d, material, x, y, z) {
     const mesh = addBox(parent, w, h, d, material, x, y, z);
     mesh.userData.machine = spec;
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
     targets.push(mesh);
     return mesh;
   }
@@ -324,7 +358,7 @@ function buildCabinet(spec) {
   [-1, 1].forEach(function (side) {
     const art = new THREE.Mesh(
       new THREE.PlaneGeometry(0.5, 1.35),
-      new THREE.MeshBasicMaterial({ map: sideMap })
+      new THREE.MeshStandardMaterial({ map: sideMap, roughness: 0.62, metalness: 0.18 })
     );
     art.position.set(side * 0.435, 1.15, -0.02);
     art.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
@@ -346,10 +380,10 @@ function buildCabinet(spec) {
 
   // Marquee header with project title from Vimeo.
   const marquee = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.78, 0.2),
+    new THREE.PlaneGeometry(0.84, 0.24),
     new THREE.MeshBasicMaterial({ map: drawMarquee(spec) })
   );
-  marquee.position.set(0, 2.02, 0.27);
+  marquee.position.set(0, 2.04, 0.28);
   marquee.userData.machine = spec;
   group.add(marquee);
   targets.push(marquee);
@@ -413,20 +447,34 @@ function buildCabinet(spec) {
   stripe.position.set(0, 0.035, -0.1);
   deck.add(stripe);
 
-  const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.018, 0.1, 6), panelMat);
+  const stick = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.014, 0.02, 0.11, 10),
+    new THREE.MeshStandardMaterial({ color: 0x222228, roughness: 0.45, metalness: 0.55 })
+  );
   stick.position.set(-0.2, 0.08, 0.02);
   stick.userData.machine = spec;
+  stick.castShadow = true;
   deck.add(stick);
   targets.push(stick);
   const ball = new THREE.Mesh(
-    new THREE.SphereGeometry(0.034, 8, 6),
-    new THREE.MeshBasicMaterial({ color: new THREE.Color(spec.neon) })
+    new THREE.SphereGeometry(0.038, 12, 10),
+    new THREE.MeshStandardMaterial({
+      color: new THREE.Color(spec.neon),
+      emissive: new THREE.Color(spec.neon),
+      emissiveIntensity: 0.7,
+      roughness: 0.28,
+      metalness: 0.25
+    })
   );
-  ball.position.set(-0.2, 0.14, 0.02);
+  ball.position.set(-0.2, 0.145, 0.02);
   ball.userData.machine = spec;
+  ball.castShadow = true;
   deck.add(ball);
   targets.push(ball);
-  const washer = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.014, 8), darkMat);
+  const washer = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.05, 0.05, 0.016, 12),
+    darkMat
+  );
   washer.position.set(-0.2, 0.035, 0.02);
   washer.userData.machine = spec;
   deck.add(washer);
@@ -435,11 +483,18 @@ function buildCabinet(spec) {
     const col = index % 3;
     const row = Math.floor(index / 3);
     const button = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.024, 0.026, 0.02, 8),
-      new THREE.MeshBasicMaterial({ color: hex })
+      new THREE.CylinderGeometry(0.026, 0.028, 0.022, 12),
+      new THREE.MeshStandardMaterial({
+        color: hex,
+        emissive: hex,
+        emissiveIntensity: 0.55,
+        roughness: 0.3,
+        metalness: 0.2
+      })
     );
-    button.position.set(0.02 + col * 0.075, 0.04, -0.02 + row * 0.085);
+    button.position.set(0.02 + col * 0.078, 0.04, -0.02 + row * 0.088);
     button.userData.machine = spec;
+    button.castShadow = true;
     deck.add(button);
     targets.push(button);
   });
@@ -473,11 +528,13 @@ export function buildMachines(scene) {
     list: built,
     targets: built.reduce(function (all, cabinet) { return all.concat(cabinet.targets); }, []),
     colliders: built.map(function (cabinet) { return cabinet.collider; }),
-    updateHover: function (id) {
+    updateHover: function (id, dt) {
+      const blend = Math.min(1, (dt || 0.016) * 8);
       built.forEach(function (cabinet) {
         const on = cabinet.spec.id === id;
+        const glow = on ? 3.8 : 2.4;
         cabinet.neonParts.forEach(function (mat) {
-          mat.color.copy(on ? cabinet.hoverColor : cabinet.neonBase);
+          mat.emissiveIntensity += (glow - mat.emissiveIntensity) * blend;
         });
       });
     }
