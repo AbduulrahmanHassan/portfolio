@@ -20,41 +20,23 @@ function box(parent, w, h, d, material, x, y, z) {
 function drawSign() {
   const canvas = document.createElement('canvas');
   canvas.width = 1024;
-  canvas.height = 480;
+  canvas.height = 256;
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  ctx.save();
-  ctx.translate(512, 120);
-  ctx.strokeStyle = '#f0d8ff';
-  ctx.fillStyle = '#f0d8ff';
-  ctx.lineWidth = 8;
-  ctx.shadowColor = '#c29bff';
-  ctx.shadowBlur = 16;
-  ctx.beginPath();
-  ctx.moveTo(-70, 16);
-  ctx.bezierCurveTo(-120, 16, -130, -24, -90, -40);
-  ctx.bezierCurveTo(-70, -74, -20, -56, 0, -26);
-  ctx.bezierCurveTo(20, -56, 70, -74, 90, -40);
-  ctx.bezierCurveTo(130, -24, 120, 16, 70, 16);
-  ctx.bezierCurveTo(36, 34, -36, 34, -70, 16);
-  ctx.closePath();
-  ctx.stroke();
-  ctx.restore();
-
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.font = '700 64px Montserrat, Arial, sans-serif';
+  ctx.font = '700 52px Montserrat, Arial, sans-serif';
   ctx.fillStyle = '#ffffff';
   ctx.shadowColor = '#9ec8ff';
-  ctx.shadowBlur = 14;
-  ctx.fillText('ABDELRAHMAN\u2019S', 512, 250);
+  ctx.shadowBlur = 12;
+  ctx.fillText('ABDELRAHMAN\u2019S', 512, 80);
 
-  ctx.font = '800 90px Orbitron, Arial, sans-serif';
+  ctx.font = '800 96px Orbitron, Arial, sans-serif';
   ctx.fillStyle = '#ff4ad8';
   ctx.shadowColor = '#ff4ad8';
-  ctx.shadowBlur = 18;
-  ctx.fillText('ARCADE', 512, 350);
+  ctx.shadowBlur = 16;
+  ctx.fillText('ARCADE', 512, 175);
   return srgb(new THREE.CanvasTexture(canvas));
 }
 
@@ -124,10 +106,10 @@ export function buildRoom(scene) {
   box(scene, 0.04, 2.75, 0.04, tube, 1.45, 1.48, -halfD + 0.18);
 
   const sign = new THREE.Mesh(
-    new THREE.PlaneGeometry(3.8, 0.85),
+    new THREE.PlaneGeometry(3.5, 0.55),
     new THREE.MeshBasicMaterial({ map: drawSign(), transparent: true })
   );
-  sign.position.set(0, 3.05, -halfD + 0.1);
+  sign.position.set(0, 3.2, -halfD + 0.1);
   scene.add(sign);
 
   const decal = new THREE.Mesh(

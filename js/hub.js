@@ -5,43 +5,42 @@ import { CONTACT, contactLinks } from './contact.js';
 function drawWallScreen() {
   const canvas = document.createElement('canvas');
   canvas.width = 1536;
-  canvas.height = 384;
+  canvas.height = 512;
   const ctx = canvas.getContext('2d');
-  const g = ctx.createLinearGradient(0, 0, 1536, 0);
-  g.addColorStop(0, '#1a1028');
-  g.addColorStop(0.5, '#2a1848');
-  g.addColorStop(1, '#1a1028');
+  const g = ctx.createLinearGradient(0, 0, 0, 512);
+  g.addColorStop(0, '#2a1848');
+  g.addColorStop(1, '#0c0814');
   ctx.fillStyle = g;
-  ctx.fillRect(0, 0, 1536, 384);
+  ctx.fillRect(0, 0, 1536, 512);
 
   ctx.strokeStyle = '#ff4ad8';
-  ctx.lineWidth = 10;
+  ctx.lineWidth = 12;
   ctx.shadowColor = '#ff4ad8';
-  ctx.shadowBlur = 16;
-  ctx.strokeRect(18, 18, 1500, 348);
+  ctx.shadowBlur = 18;
+  ctx.strokeRect(20, 20, 1496, 472);
 
   ctx.shadowBlur = 0;
   ctx.textAlign = 'left';
   ctx.fillStyle = '#ff4ad8';
-  ctx.font = '800 72px Orbitron, Montserrat, Arial, sans-serif';
-  ctx.fillText('CONTACT', 64, 130);
+  ctx.font = '800 96px Orbitron, Montserrat, Arial, sans-serif';
+  ctx.fillText('CONTACT', 72, 160);
 
   ctx.fillStyle = '#ffffff';
-  ctx.font = '700 40px Montserrat, Arial, sans-serif';
-  ctx.fillText(CONTACT.name || 'Abdelrahman Hassan', 64, 200);
+  ctx.font = '700 48px Montserrat, Arial, sans-serif';
+  ctx.fillText(CONTACT.name || 'Abdelrahman Hassan', 72, 250);
 
-  ctx.fillStyle = 'rgba(255,255,255,0.7)';
-  ctx.font = '600 26px Montserrat, Arial, sans-serif';
-  ctx.fillText(CONTACT.role || '', 64, 250);
+  ctx.fillStyle = 'rgba(255,255,255,0.72)';
+  ctx.font = '600 30px Montserrat, Arial, sans-serif';
+  ctx.fillText(CONTACT.role || '', 72, 310);
 
   ctx.textAlign = 'right';
   ctx.fillStyle = '#3ad7ff';
-  ctx.font = '700 48px Montserrat, Arial, sans-serif';
-  ctx.fillText('CLICK TO OPEN', 1472, 160);
+  ctx.font = '700 56px Montserrat, Arial, sans-serif';
+  ctx.fillText('CLICK TO OPEN', 1464, 200);
 
   ctx.fillStyle = 'rgba(255,255,255,0.45)';
-  ctx.font = '500 24px Montserrat, Arial, sans-serif';
-  ctx.fillText('LinkedIn · Phone · WhatsApp · Email · GitHub · Behance', 1472, 230);
+  ctx.font = '500 26px Montserrat, Arial, sans-serif';
+  ctx.fillText('LinkedIn · Phone · WhatsApp · Email · GitHub · Behance', 1464, 280);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.encoding = THREE.sRGBEncoding;
@@ -52,8 +51,8 @@ function drawWallScreen() {
 export function buildContactHub(scene) {
   const group = new THREE.Group();
   const halfD = ROOM.depth / 2;
-  // Wide screen just above cabinet tops so the full wall width reads from the entrance.
-  group.position.set(0, 2.28, -halfD + 0.14);
+  // Tall, near wall-width monitor above the cabinets.
+  group.position.set(0, 2.35, -halfD + 0.14);
 
   const neon = new THREE.MeshBasicMaterial({ color: 0xff4ad8 });
   const frameMat = new THREE.MeshBasicMaterial({ color: 0x121018 });
@@ -68,9 +67,9 @@ export function buildContactHub(scene) {
     return mesh;
   }
 
-  // Near wall-width monitor (~7.6 × 0.9 m).
-  const sw = 7.6;
-  const sh = 0.9;
+  // Near wall-width monitor (~7.8 × 1.35 m).
+  const sw = 7.8;
+  const sh = 1.35;
   solid(sw, sh, 0.07, frameMat, 0, 0, 0);
   solid(sw + 0.12, 0.07, 0.08, neon, 0, sh / 2 + 0.02, 0.02);
   solid(sw + 0.12, 0.07, 0.08, neon, 0, -sh / 2 - 0.02, 0.02);
