@@ -45,8 +45,9 @@ function drawScreen() {
 
 export function buildContactHub(scene) {
   const group = new THREE.Group();
-  group.position.set(1.35, 0, -2.5);
-  group.rotation.y = -0.35;
+  // Larger kiosk, easier to find from the entrance.
+  group.position.set(1.55, 0, -2.35);
+  group.rotation.y = -0.42;
 
   const body = new THREE.MeshStandardMaterial({ color: 0x14141c, roughness: 0.7, metalness: 0.25 });
   const dark = new THREE.MeshStandardMaterial({ color: 0x0a0a10, roughness: 0.85, metalness: 0.1 });
@@ -62,42 +63,33 @@ export function buildContactHub(scene) {
     return mesh;
   }
 
-  solid(0.72, 1.05, 0.42, body, 0, 0.55, 0);
-  solid(0.78, 0.08, 0.46, body, 0, 1.12, 0.02);
-  solid(0.08, 0.7, 0.08, neon, -0.34, 0.7, 0.18);
-  solid(0.08, 0.7, 0.08, neon, 0.34, 0.7, 0.18);
-  solid(0.7, 0.04, 0.04, neon, 0, 1.18, 0.2);
+  solid(0.95, 1.35, 0.5, body, 0, 0.7, 0);
+  solid(1.02, 0.1, 0.56, body, 0, 1.42, 0.02);
+  solid(0.1, 0.95, 0.1, neon, -0.44, 0.85, 0.22);
+  solid(0.1, 0.95, 0.1, neon, 0.44, 0.85, 0.22);
+  solid(0.92, 0.05, 0.05, neon, 0, 1.5, 0.24);
 
   const screen = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.58, 0.44),
+    new THREE.PlaneGeometry(0.78, 0.58),
     new THREE.MeshBasicMaterial({ map: drawScreen() })
   );
-  screen.position.set(0, 0.78, 0.22);
+  screen.position.set(0, 0.95, 0.26);
   screen.userData.hub = true;
   group.add(screen);
   targets.push(screen);
 
-  const bezel = solid(0.64, 0.5, 0.04, dark, 0, 0.78, 0.2);
-  bezel.scale.set(1, 1, 1);
-
-  const pedestal = solid(0.8, 0.08, 0.5, body, 0, 0.04, 0);
-  pedestal.userData.hub = true;
-
-  const light = new THREE.PointLight(0xff4ad8, 0.45, 2.8, 2);
-  light.position.set(0, 1.0, 0.45);
-  group.add(light);
+  solid(0.86, 0.66, 0.05, dark, 0, 0.95, 0.23);
+  solid(1.05, 0.1, 0.58, body, 0, 0.05, 0);
 
   scene.add(group);
 
   return {
     group: group,
     targets: targets,
-    light: light,
-    lightBase: 0.45,
-    collider: { x: 1.35, z: -2.5, r: 0.55 },
+    neon: neon,
+    collider: { x: 1.55, z: -2.35, r: 0.65 },
     setHover: function (on) {
-      light.intensity = on ? 1.1 : 0.45;
-      neon.emissiveIntensity = on ? 3.4 : 2.2;
+      neon.emissiveIntensity = on ? 3.5 : 2.2;
     }
   };
 }
@@ -129,26 +121,20 @@ export function createContactUi() {
   intro.textContent = CONTACT.intro || '';
 
   list.innerHTML = '';
-  const links = contactLinks();
-  if (!links.length) {
-    const empty = document.createElement('p');
-    empty.className = 'contact-empty';
-    empty.textContent = 'Add your links in js/contact.js';
-    list.appendChild(empty);
-  } else {
-    links.forEach(function (link) {
-      const a = document.createElement('a');
-      a.className = 'contact-link' + (link.download ? ' is-cv' : '');
+  contactLinks().forEach(function (link) {
+    const a = document.createElement(link.missing ? 'div' : 'a');
+    a.className = 'contact-link' + (link.download ? ' is-cv' : '') + (link.missing ? ' is-missing' : '');
+    a.innerHTML = '<span class="ico">' + iconSvg(link.icon) + '</span><span class="txt">' + link.label + '</span>';
+    if (!link.missing) {
       a.href = link.href;
-      a.innerHTML = '<span class="ico">' + iconSvg(link.icon) + '</span><span class="txt">' + link.label + '</span>';
       if (link.external) {
         a.target = '_blank';
         a.rel = 'noopener noreferrer';
       }
       if (link.download) a.setAttribute('download', '');
-      list.appendChild(a);
-    });
-  }
+    }
+    list.appendChild(a);
+  });
 
   function show() {
     open = true;

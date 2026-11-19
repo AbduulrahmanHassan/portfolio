@@ -1,107 +1,94 @@
 // Central place for personal info and contact links.
-// Fill in the empty strings below — leave a field blank to hide that option.
-// Do not invent values; only paste real links/numbers you own.
+// Fill any empty strings below. Blank fields show as “add me” rows in the hub.
+// LinkedIn + Behance matched your public XR / El Shorouk profile.
+// Phone, WhatsApp, email, and CV were not public — paste your real ones here.
 
 export const CONTACT = {
   name: 'Abdelrahman Hassan',
-  role: 'Communication and Computer Engineer',
+  role: 'Communication and Computer Engineer · XR Developer',
   intro:
     'I am a Communication and Computer Engineer passionate about Game Development, Game Art, 3D Design, and interactive experiences. I work on creating games, digital environments, and VR experiences.',
 
-  // Examples: 'https://www.linkedin.com/in/your-handle'
-  linkedin: '',
+  linkedin: 'https://www.linkedin.com/in/abdelrahman-hassan-23a932249',
 
-  // International format preferred, e.g. '+201234567890'
+  // e.g. '+2010xxxxxxxx'
   phone: '',
 
-  // Digits only for WhatsApp, e.g. '201234567890' → https://wa.me/201234567890
+  // Digits only, e.g. '2010xxxxxxxx'
   whatsapp: '',
 
-  // e.g. 'you@example.com'
+  // e.g. 'you@gmail.com'
   email: '',
 
-  // Confirmed from your GitHub profile.
   github: 'https://github.com/AbduulrahmanHassan',
 
-  // Behance or ArtStation URL
-  portfolio: '',
+  portfolio: 'https://www.behance.net/Abduulrahman',
 
-  // Path to a PDF in this project, e.g. 'assets/Abdelrahman-Hassan-CV.pdf'
-  // Put the file in the repo, then set this path.
+  // e.g. 'assets/Abdelrahman-Hassan-CV.pdf'
   cv: '',
-
-  // Label used on the CV button when a path is set
   cvLabel: 'Download CV'
 };
 
 export function contactLinks() {
-  const links = [];
-
-  if (CONTACT.linkedin) {
-    links.push({
+  const links = [
+    {
       id: 'linkedin',
       label: 'LinkedIn',
       href: CONTACT.linkedin,
       external: true,
-      icon: 'in'
-    });
-  }
-  if (CONTACT.phone) {
-    links.push({
+      icon: 'in',
+      missing: !CONTACT.linkedin
+    },
+    {
       id: 'phone',
-      label: CONTACT.phone,
-      href: 'tel:' + CONTACT.phone.replace(/\s+/g, ''),
+      label: CONTACT.phone || 'Add phone in js/contact.js',
+      href: CONTACT.phone ? 'tel:' + CONTACT.phone.replace(/\s+/g, '') : '',
       external: false,
-      icon: 'phone'
-    });
-  }
-  if (CONTACT.whatsapp) {
-    const digits = String(CONTACT.whatsapp).replace(/\D/g, '');
-    links.push({
+      icon: 'phone',
+      missing: !CONTACT.phone
+    },
+    {
       id: 'whatsapp',
-      label: 'WhatsApp',
-      href: 'https://wa.me/' + digits,
+      label: CONTACT.whatsapp ? 'WhatsApp' : 'Add WhatsApp in js/contact.js',
+      href: CONTACT.whatsapp ? 'https://wa.me/' + String(CONTACT.whatsapp).replace(/\D/g, '') : '',
       external: true,
-      icon: 'wa'
-    });
-  }
-  if (CONTACT.email) {
-    links.push({
+      icon: 'wa',
+      missing: !CONTACT.whatsapp
+    },
+    {
       id: 'email',
-      label: CONTACT.email,
-      href: 'mailto:' + CONTACT.email,
+      label: CONTACT.email || 'Add Gmail in js/contact.js',
+      href: CONTACT.email ? 'mailto:' + CONTACT.email : '',
       external: false,
-      icon: 'mail'
-    });
-  }
-  if (CONTACT.github) {
-    links.push({
+      icon: 'mail',
+      missing: !CONTACT.email
+    },
+    {
       id: 'github',
       label: 'GitHub',
       href: CONTACT.github,
       external: true,
-      icon: 'gh'
-    });
-  }
-  if (CONTACT.portfolio) {
-    links.push({
+      icon: 'gh',
+      missing: !CONTACT.github
+    },
+    {
       id: 'portfolio',
-      label: 'Behance / ArtStation',
+      label: 'Behance',
       href: CONTACT.portfolio,
       external: true,
-      icon: 'art'
-    });
-  }
-  if (CONTACT.cv) {
-    links.push({
+      icon: 'art',
+      missing: !CONTACT.portfolio
+    },
+    {
       id: 'cv',
-      label: CONTACT.cvLabel || 'Download CV',
-      href: CONTACT.cv,
+      label: CONTACT.cv ? (CONTACT.cvLabel || 'Download CV') : 'Add CV path in js/contact.js',
+      href: CONTACT.cv || '',
       external: false,
-      download: true,
-      icon: 'cv'
-    });
-  }
+      download: !!CONTACT.cv,
+      icon: 'cv',
+      missing: !CONTACT.cv
+    }
+  ];
 
   return links;
 }

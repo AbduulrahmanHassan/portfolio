@@ -16,10 +16,10 @@ const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 
 const isMobile = matchMedia('(max-width: 900px), (pointer: coarse)').matches;
-const maxDpr = isMobile ? 1.1 : 1.25;
+const maxDpr = isMobile ? 1 : 1.15;
 
 const renderer = new THREE.WebGLRenderer({
-  antialias: !isMobile,
+  antialias: false,
   alpha: true,
   powerPreference: 'high-performance'
 });
@@ -28,13 +28,13 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x000000, 0);
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.14;
+renderer.toneMappingExposure = 1.1;
 renderer.shadowMap.enabled = false;
 renderer.domElement.id = 'c';
 stage.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 26);
+const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.12, 22);
 camera.position.set(START.position[0], START.position[1], START.position[2]);
 
 const playback = createPlayback(cssMount);
@@ -173,6 +173,8 @@ window.addEventListener('resize', function () {
   playback.resize();
 });
 
+let hoverTick = 0;
+
 function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(0.05, (now - last) / 1000);
@@ -183,7 +185,13 @@ function frame(now) {
   }
   if (started && !contactUi.open) controls.update(dt);
   if (playback.active || contactUi.open) prompt.hidden = true;
-  else if (started && controls.locked) setHover(pick(null, null));
+  else if (started && controls.locked) {
+    hoverTick += dt;
+    if (hoverTick > 0.08) {
+      hoverTick = 0;
+      setHover(pick(null, null));
+    }
+  }
   machines.updateHover(hovered && !playback.active && !contactUi.open ? hovered.id : null, dt);
   if (!hubHover && !contactUi.open) hub.setHover(false);
   playback.sync();

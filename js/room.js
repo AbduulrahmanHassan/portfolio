@@ -296,20 +296,18 @@ function makeEnvironment(renderer) {
 
 export function buildRoom(scene, renderer) {
   const isMobile = matchMedia('(max-width: 900px), (pointer: coarse)').matches;
-  if (!isMobile) scene.environment = makeEnvironment(renderer);
-  scene.fog = new THREE.FogExp2(0x0a0712, 0.022);
+  // Skip env map on all devices — big savings; neon emissives carry the look.
+  scene.fog = isMobile ? null : new THREE.FogExp2(0x0a0712, 0.018);
 
   const wallMat = new THREE.MeshStandardMaterial({
     map: wallTexture(),
     roughness: 0.92,
     metalness: 0.04
   });
-  // Reflective floor without clearcoat (cheaper than MeshPhysicalMaterial).
   const floorMat = new THREE.MeshStandardMaterial({
     map: floorTexture(),
-    roughness: 0.22,
-    metalness: 0.78,
-    envMapIntensity: isMobile ? 0.6 : 1.05
+    roughness: 0.28,
+    metalness: 0.7
   });
 
   const halfW = ROOM.width / 2;
@@ -376,27 +374,19 @@ export function buildRoom(scene, renderer) {
   const benchMat = new THREE.MeshStandardMaterial({ color: 0x14141c, roughness: 0.55, metalness: 0.4 });
   box(scene, 1.7, 0.38, 0.52, benchMat, 0, 0.19, -2.55);
   plant(scene, -1.25, -2.45);
-  pendant(scene, -1.75, -2.15, isMobile);
-  pendant(scene, 1.75, -2.15, isMobile);
+  pendant(scene, -1.75, -2.15, true);
+  pendant(scene, 1.75, -2.15, true);
 
-  scene.add(new THREE.AmbientLight(0x2a1844, 0.55));
-  scene.add(new THREE.HemisphereLight(0x5a3a82, 0x08060e, 0.62));
+  scene.add(new THREE.AmbientLight(0x2a1844, 0.7));
+  scene.add(new THREE.HemisphereLight(0x5a3a82, 0x08060e, 0.7));
 
-  const sun = new THREE.DirectionalLight(0xe8d8ff, 0.42);
+  const sun = new THREE.DirectionalLight(0xe8d8ff, 0.35);
   sun.position.set(2.2, 6.4, 3.0);
   scene.add(sun);
 
-  const signLight = new THREE.PointLight(0xb388ff, 1.25, 7.2, 2);
+  const signLight = new THREE.PointLight(0xb388ff, 1.05, 6.5, 2);
   signLight.position.set(0, 2.15, -halfD + 0.85);
   scene.add(signLight);
-  if (!isMobile) {
-    const left = new THREE.PointLight(0x3ad7ff, 0.9, 7, 2);
-    left.position.set(-2.3, 1.55, -0.6);
-    scene.add(left);
-    const right = new THREE.PointLight(0xff3ec8, 0.9, 7, 2);
-    right.position.set(2.3, 1.55, -0.6);
-    scene.add(right);
-  }
 
   return {
     colliders: [
