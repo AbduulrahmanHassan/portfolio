@@ -6,30 +6,58 @@
 <title>Abdelrahman's Arcade</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Orbitron:wght@700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Orbitron:wght@700;800&display=swap" rel="stylesheet"/>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;overflow:hidden;background:#07060c;color:#f4f6fb;font-family:Montserrat,Arial,sans-serif}
 #stage{position:fixed;inset:0}
 #css{position:absolute;inset:0;z-index:0;pointer-events:none}
 #c{position:absolute;inset:0;z-index:1;display:block;touch-action:none}
-body.playing #c{pointer-events:none}
+body.playing #c,body.contact-open #c{pointer-events:none}
 #cross{position:fixed;left:50%;top:50%;width:9px;height:9px;margin:-5px 0 0 -5px;border:1px solid rgba(255,255,255,.8);border-radius:50%;z-index:3;pointer-events:none;display:none}
 body.started #cross{display:block}
-body.playing #cross{display:none}
+body.playing #cross,body.contact-open #cross{display:none}
 #prompt{position:fixed;left:50%;bottom:11%;transform:translateX(-50%);z-index:3;pointer-events:none;font-size:12px;font-weight:700;letter-spacing:.22em;color:#fff;padding:8px 14px;border:1px solid rgba(255,78,210,.85);background:rgba(8,6,14,.55)}
 #playbar{position:fixed;top:18px;right:18px;z-index:4;display:flex;align-items:center;gap:12px}
 #now-title{font-size:12px;letter-spacing:.14em;font-weight:700;color:rgba(255,255,255,.82)}
-#exit{background:transparent;color:#ff4ad8;border:1px solid #ff4ad8;font-family:Orbitron,Montserrat,sans-serif;font-size:11px;font-weight:700;letter-spacing:.18em;padding:8px 14px;cursor:pointer}
-#exit:hover{background:rgba(255,74,216,.14)}
+#exit,#contact-close{background:transparent;color:#ff4ad8;border:1px solid #ff4ad8;font-family:Orbitron,Montserrat,sans-serif;font-size:11px;font-weight:700;letter-spacing:.18em;padding:8px 14px;cursor:pointer}
+#exit:hover,#contact-close:hover{background:rgba(255,74,216,.14)}
 #welcome{position:fixed;inset:0;z-index:5;display:flex;align-items:flex-end;justify-content:center;background:linear-gradient(transparent 40%,rgba(5,3,10,.78));text-align:center;padding:0 20px 7vh;pointer-events:none}
 #welcome.hide{display:none}
 #welcome .card{pointer-events:auto}
 #enter{background:transparent;color:#ff4ad8;border:1px solid #ff4ad8;font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;letter-spacing:.22em;padding:14px 28px;cursor:pointer}
 #enter:hover{background:rgba(255,74,216,.14)}
-#welcome .hint{margin-top:14px;font-size:12px;letter-spacing:.06em;color:rgba(255,255,255,.78)}
+#welcome .hint{margin-top:14px;font-size:12px;letter-spacing:.06em;color:rgba(255,255,255,.78);line-height:1.7}
 .cab-screen{background:#000;overflow:hidden;position:relative}
 .cab-screen iframe{width:100%;height:100%;border:0;display:block;background:#000}
+
+#loader{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 40%,#1a1230,#07060c 70%);text-align:center}
+#loader.hide{opacity:0;pointer-events:none;transition:opacity .45s ease}
+#loader .brand{font-family:Orbitron,sans-serif;font-size:clamp(18px,4vw,28px);letter-spacing:.28em;color:#ff4ad8;text-shadow:0 0 24px rgba(255,74,216,.45)}
+#loader .bar{width:min(260px,60vw);height:3px;margin:22px auto 0;background:rgba(255,255,255,.12);overflow:hidden}
+#loader .bar>i{display:block;height:100%;width:35%;background:linear-gradient(90deg,#3ad7ff,#ff4ad8);animation:load 1.1s ease-in-out infinite}
+#loader .msg{margin-top:14px;font-size:12px;letter-spacing:.14em;color:rgba(255,255,255,.55)}
+@keyframes load{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
+
+#contact{position:fixed;inset:0;z-index:8;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(4,2,10,.72);backdrop-filter:blur(4px)}
+#contact[hidden]{display:none !important}
+.contact-panel{width:min(440px,100%);max-height:min(84vh,720px);overflow:auto;border:1px solid rgba(255,74,216,.7);background:linear-gradient(180deg,rgba(22,14,34,.96),rgba(8,6,14,.98));padding:22px 20px 18px;box-shadow:0 0 40px rgba(255,74,216,.12)}
+.contact-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.contact-top h2{font-family:Orbitron,sans-serif;font-size:15px;letter-spacing:.2em;color:#ff4ad8}
+.contact-top .role{margin-top:6px;font-size:12px;letter-spacing:.04em;color:rgba(255,255,255,.7)}
+#contact-intro{font-size:13px;line-height:1.55;color:rgba(255,255,255,.82);margin:0 0 18px}
+#contact-links{display:grid;gap:10px}
+.contact-link{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid rgba(255,255,255,.16);color:#fff;text-decoration:none;background:rgba(255,255,255,.03);transition:border-color .2s,background .2s}
+.contact-link:hover,.contact-link:focus-visible{border-color:#ff4ad8;background:rgba(255,74,216,.1);outline:none}
+.contact-link .ico{width:28px;height:28px;display:grid;place-items:center;color:#3ad7ff;flex:0 0 auto}
+.contact-link .txt{font-size:13px;letter-spacing:.04em;word-break:break-word}
+.contact-link.is-cv{border-color:rgba(58,215,255,.55)}
+.contact-empty{font-size:12px;color:rgba(255,255,255,.55);padding:8px 0}
+@media (max-width:640px){
+  #prompt{bottom:16%;font-size:11px;letter-spacing:.14em}
+  #welcome .hint{font-size:11px}
+  .contact-panel{padding:18px 14px}
+}
 </style>
 <script type="importmap">
 {
@@ -41,6 +69,13 @@ body.playing #cross{display:none}
 </script>
 </head>
 <body>
+<div id="loader">
+  <div>
+    <div class="brand">ARCADE</div>
+    <div class="bar"><i></i></div>
+    <div class="msg" id="loader-msg">Loading room…</div>
+  </div>
+</div>
 <div id="stage"><div id="css"></div></div>
 <div id="cross"></div>
 <div id="prompt" hidden>CLICK TO PLAY</div>
@@ -51,7 +86,20 @@ body.playing #cross{display:none}
 <div id="welcome">
   <div class="card">
     <button id="enter" type="button">ENTER ARCADE</button>
-    <p class="hint">WASD to move · Mouse to look · Click a machine to play · Esc to exit</p>
+    <p class="hint">WASD to move · Mouse to look · Click a machine to play<br/>Click the Contact Hub · Esc to close</p>
+  </div>
+</div>
+<div id="contact" hidden>
+  <div class="contact-panel" role="dialog" aria-modal="true" aria-labelledby="contact-name">
+    <div class="contact-top">
+      <div>
+        <h2 id="contact-name">Contact</h2>
+        <p class="role" id="contact-role"></p>
+      </div>
+      <button id="contact-close" type="button">CLOSE</button>
+    </div>
+    <p id="contact-intro"></p>
+    <div id="contact-links"></div>
   </div>
 </div>
 <script type="module" src="js/main.js"></script>

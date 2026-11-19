@@ -7,7 +7,7 @@ function srgb(texture) {
 }
 
 function wallTexture() {
-  const size = 256;
+  const size = 128;
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
@@ -50,12 +50,12 @@ function wallTexture() {
   const texture = srgb(new THREE.CanvasTexture(canvas));
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set(2.4, 1.15);
-  texture.anisotropy = 4;
+  texture.anisotropy = 1;
   return texture;
 }
 
 function floorTexture() {
-  const size = 256;
+  const size = 128;
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
@@ -88,7 +88,7 @@ function floorTexture() {
   const texture = srgb(new THREE.CanvasTexture(canvas));
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set(5, 4);
-  texture.anisotropy = 4;
+  texture.anisotropy = 1;
   return texture;
 }
 
@@ -295,42 +295,36 @@ function makeEnvironment(renderer) {
 }
 
 export function buildRoom(scene, renderer) {
-  scene.environment = makeEnvironment(renderer);
-  scene.fog = new THREE.FogExp2(0x0a0712, 0.028);
+  const isMobile = matchMedia('(max-width: 900px), (pointer: coarse)').matches;
+  if (!isMobile) scene.environment = makeEnvironment(renderer);
+  scene.fog = new THREE.FogExp2(0x0a0712, 0.022);
 
   const wallMat = new THREE.MeshStandardMaterial({
     map: wallTexture(),
     roughness: 0.92,
     metalness: 0.04
   });
-  const floorMat = new THREE.MeshPhysicalMaterial({
+  // Reflective floor without clearcoat (cheaper than MeshPhysicalMaterial).
+  const floorMat = new THREE.MeshStandardMaterial({
     map: floorTexture(),
-    roughness: 0.18,
-    metalness: 0.72,
-    clearcoat: 0.7,
-    clearcoatRoughness: 0.22,
-    envMapIntensity: 1.25
+    roughness: 0.22,
+    metalness: 0.78,
+    envMapIntensity: isMobile ? 0.6 : 1.05
   });
 
   const halfW = ROOM.width / 2;
   const halfD = ROOM.depth / 2;
   const h = ROOM.height;
 
-  const floor = box(scene, ROOM.width, 0.2, ROOM.depth, floorMat, 0, -0.1, 0);
-  floor.receiveShadow = true;
-  floor.castShadow = false;
-
-  const back = box(scene, ROOM.width, h, 0.16, wallMat, 0, h / 2, -halfD);
-  back.receiveShadow = true;
+  box(scene, ROOM.width, 0.2, ROOM.depth, floorMat, 0, -0.1, 0);
+  box(scene, ROOM.width, h, 0.16, wallMat, 0, h / 2, -halfD);
   box(scene, ROOM.width, h, 0.16, wallMat, 0, h / 2, halfD);
   box(scene, 0.16, h, ROOM.depth, wallMat, -halfW, h / 2, 0);
   box(scene, 0.16, h, ROOM.depth, wallMat, halfW, h / 2, 0);
 
-  // Ceiling with a shallow recess.
   const ceilingMat = new THREE.MeshStandardMaterial({ color: 0x100e16, roughness: 0.9, metalness: 0.08 });
   box(scene, ROOM.width, 0.12, ROOM.depth, ceilingMat, 0, h, 0);
-  const recess = box(scene, ROOM.width - 1.4, 0.08, ROOM.depth - 1.4, new THREE.MeshStandardMaterial({ color: 0x0c0a12, roughness: 0.95 }), 0, h - 0.08, 0);
-  recess.receiveShadow = true;
+  box(scene, ROOM.width - 1.4, 0.08, ROOM.depth - 1.4, new THREE.MeshStandardMaterial({ color: 0x0c0a12, roughness: 0.95 }), 0, h - 0.08, 0);
 
   // Baseboard + crown neon.
   const edge = glow('#c14bff', 1.8);
@@ -380,39 +374,29 @@ export function buildRoom(scene, renderer) {
   poster(scene, pixelTexture(PAD, '#d7def2', '#121018'), halfW - 0.1, 1.7, -2.15, -Math.PI / 2);
 
   const benchMat = new THREE.MeshStandardMaterial({ color: 0x14141c, roughness: 0.55, metalness: 0.4 });
-  const bench = box(scene, 1.7, 0.38, 0.52, benchMat, 0, 0.19, -2.55);
-  bench.castShadow = true;
-  bench.receiveShadow = true;
+  box(scene, 1.7, 0.38, 0.52, benchMat, 0, 0.19, -2.55);
   plant(scene, -1.25, -2.45);
-  pendant(scene, -1.75, -2.15);
-  pendant(scene, 1.75, -2.15);
+  pendant(scene, -1.75, -2.15, isMobile);
+  pendant(scene, 1.75, -2.15, isMobile);
 
-  scene.add(new THREE.AmbientLight(0x2a1844, 0.42));
-  scene.add(new THREE.HemisphereLight(0x5a3a82, 0x08060e, 0.55));
+  scene.add(new THREE.AmbientLight(0x2a1844, 0.55));
+  scene.add(new THREE.HemisphereLight(0x5a3a82, 0x08060e, 0.62));
 
-  const sun = new THREE.DirectionalLight(0xe8d8ff, 0.38);
+  const sun = new THREE.DirectionalLight(0xe8d8ff, 0.42);
   sun.position.set(2.2, 6.4, 3.0);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(512, 512);
-  sun.shadow.camera.near = 1;
-  sun.shadow.camera.far = 18;
-  sun.shadow.camera.left = -6;
-  sun.shadow.camera.right = 6;
-  sun.shadow.camera.top = 6;
-  sun.shadow.camera.bottom = -6;
-  sun.shadow.bias = -0.0005;
-  sun.shadow.radius = 2.5;
   scene.add(sun);
 
-  const signLight = new THREE.PointLight(0xb388ff, 1.55, 7.5, 2);
+  const signLight = new THREE.PointLight(0xb388ff, 1.25, 7.2, 2);
   signLight.position.set(0, 2.15, -halfD + 0.85);
   scene.add(signLight);
-  const left = new THREE.PointLight(0x3ad7ff, 1.15, 7.5, 2);
-  left.position.set(-2.3, 1.55, -0.6);
-  scene.add(left);
-  const right = new THREE.PointLight(0xff3ec8, 1.15, 7.5, 2);
-  right.position.set(2.3, 1.55, -0.6);
-  scene.add(right);
+  if (!isMobile) {
+    const left = new THREE.PointLight(0x3ad7ff, 0.9, 7, 2);
+    left.position.set(-2.3, 1.55, -0.6);
+    scene.add(left);
+    const right = new THREE.PointLight(0xff3ec8, 0.9, 7, 2);
+    right.position.set(2.3, 1.55, -0.6);
+    scene.add(right);
+  }
 
   return {
     colliders: [
@@ -424,7 +408,8 @@ export function buildRoom(scene, renderer) {
       maxX: halfW - 0.42,
       minZ: -halfD + 0.42,
       maxZ: halfD - 0.42
-    }
+    },
+    isMobile: isMobile
   };
 }
 
@@ -435,7 +420,6 @@ function poster(scene, map, x, y, z, rotationY) {
   );
   frame.position.set(x, y, z);
   frame.rotation.y = rotationY;
-  frame.castShadow = true;
   scene.add(frame);
   const art = new THREE.Mesh(
     new THREE.PlaneGeometry(0.6, 0.44),
@@ -443,46 +427,38 @@ function poster(scene, map, x, y, z, rotationY) {
   );
   art.position.set(0, 0, 0.025);
   frame.add(art);
-  const rim = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.64, 0.48),
-    new THREE.MeshBasicMaterial({ color: 0xb388ff, transparent: true, opacity: 0.22 })
-  );
-  rim.position.set(0, 0, 0.02);
-  frame.add(rim);
 }
 
 function plant(scene, x, z) {
   const group = new THREE.Group();
   const pot = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.16, 0.13, 0.32, 14),
+    new THREE.CylinderGeometry(0.16, 0.13, 0.32, 8),
     new THREE.MeshStandardMaterial({ color: 0xf2f2f4, roughness: 0.55, metalness: 0.05 })
   );
   pot.position.y = 0.16;
-  pot.castShadow = true;
   group.add(pot);
   const leafMat = new THREE.MeshStandardMaterial({ color: 0x1f6b38, roughness: 0.78 });
-  for (let i = 0; i < 6; i++) {
-    const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.1 + (i % 3) * 0.02, 8, 6), leafMat);
-    const angle = (i / 6) * Math.PI * 2;
+  for (let i = 0; i < 4; i++) {
+    const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.1 + (i % 3) * 0.02, 6, 5), leafMat);
+    const angle = (i / 4) * Math.PI * 2;
     leaf.position.set(Math.cos(angle) * 0.08, 0.48 + (i % 3) * 0.08, Math.sin(angle) * 0.08);
-    leaf.castShadow = true;
     group.add(leaf);
   }
   group.position.set(x, 0, z);
   scene.add(group);
 }
 
-function pendant(scene, x, z) {
+function pendant(scene, x, z, isMobile) {
   const group = new THREE.Group();
   const cord = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.008, 0.008, 0.55, 6),
-    new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.6, metalness: 0.4 })
+    new THREE.CylinderGeometry(0.008, 0.008, 0.55, 4),
+    new THREE.MeshBasicMaterial({ color: 0x111111 })
   );
   cord.position.y = 0.28;
   group.add(cord);
 
   const shade = new THREE.Mesh(
-    new THREE.SphereGeometry(0.28, 18, 12, 0, Math.PI * 2, 0, Math.PI * 0.52),
+    new THREE.SphereGeometry(0.28, 10, 8, 0, Math.PI * 2, 0, Math.PI * 0.52),
     new THREE.MeshStandardMaterial({
       color: 0x181818,
       roughness: 0.35,
@@ -490,25 +466,11 @@ function pendant(scene, x, z) {
       side: THREE.DoubleSide
     })
   );
-  shade.castShadow = true;
   group.add(shade);
 
-  const ring = new THREE.Mesh(
-    new THREE.TorusGeometry(0.22, 0.012, 8, 24),
-    new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.4, metalness: 0.7 })
-  );
-  ring.rotation.x = Math.PI / 2;
-  ring.position.y = -0.02;
-  group.add(ring);
-
   const bulb = new THREE.Mesh(
-    new THREE.SphereGeometry(0.08, 10, 8),
-    new THREE.MeshStandardMaterial({
-      color: 0xffe2b0,
-      emissive: 0xffd090,
-      emissiveIntensity: 1.4,
-      roughness: 0.4
-    })
+    new THREE.SphereGeometry(0.08, 6, 5),
+    new THREE.MeshBasicMaterial({ color: 0xffe2b0 })
   );
   bulb.position.y = -0.09;
   group.add(bulb);
@@ -516,7 +478,9 @@ function pendant(scene, x, z) {
   group.position.set(x, ROOM.height - 0.28, z);
   scene.add(group);
 
-  const light = new THREE.PointLight(0xffd8a0, 0.55, 4.2, 2);
-  light.position.set(x, ROOM.height - 0.58, z);
-  scene.add(light);
+  if (!isMobile) {
+    const light = new THREE.PointLight(0xffd8a0, 0.4, 3.8, 2);
+    light.position.set(x, ROOM.height - 0.58, z);
+    scene.add(light);
+  }
 }

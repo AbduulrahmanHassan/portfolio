@@ -9,8 +9,6 @@ function srgb(texture) {
 function addBox(parent, w, h, d, material, x, y, z) {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
   mesh.position.set(x, y, z);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
   parent.add(mesh);
   return mesh;
 }
@@ -422,14 +420,13 @@ function buildCabinet(spec) {
   stripe.position.set(0, 0.035, -0.1);
   deck.add(stripe);
 
-  const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.018, 0.1, 10), panelMat);
+  const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.018, 0.1, 6), panelMat);
   stick.position.set(-0.2, 0.08, 0.02);
   stick.userData.machine = spec;
-  stick.castShadow = true;
   deck.add(stick);
   targets.push(stick);
   const ball = new THREE.Mesh(
-    new THREE.SphereGeometry(0.034, 12, 10),
+    new THREE.SphereGeometry(0.034, 8, 6),
     new THREE.MeshStandardMaterial({
       color: new THREE.Color(spec.neon),
       emissive: new THREE.Color(spec.neon),
@@ -440,10 +437,9 @@ function buildCabinet(spec) {
   );
   ball.position.set(-0.2, 0.14, 0.02);
   ball.userData.machine = spec;
-  ball.castShadow = true;
   deck.add(ball);
   targets.push(ball);
-  const washer = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.014, 12), darkMat);
+  const washer = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.014, 8), darkMat);
   washer.position.set(-0.2, 0.035, 0.02);
   washer.userData.machine = spec;
   deck.add(washer);
@@ -452,7 +448,7 @@ function buildCabinet(spec) {
     const col = index % 3;
     const row = Math.floor(index / 3);
     const button = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.024, 0.026, 0.02, 12),
+      new THREE.CylinderGeometry(0.024, 0.026, 0.02, 8),
       new THREE.MeshStandardMaterial({
         color: hex,
         emissive: hex,
@@ -472,10 +468,6 @@ function buildCabinet(spec) {
   addBox(group, lip, 1.85, lip, neon, 0.43, 1.0, 0.32);
   addBox(group, 0.9, lip, lip, neonAlt, 0, 1.98, 0.24);
 
-  const light = new THREE.PointLight(new THREE.Color(spec.neon), 0.55, 3.2, 2);
-  light.position.set(0, 1.3, 0.6);
-  group.add(light);
-
   return {
     spec: spec,
     group: group,
@@ -483,8 +475,6 @@ function buildCabinet(spec) {
     idle: idle,
     targets: targets,
     neonParts: neonParts,
-    light: light,
-    lightBase: 0.55,
     collider: { x: spec.position[0], z: spec.position[2], r: 0.52 }
   };
 }
@@ -504,12 +494,10 @@ export function buildMachines(scene) {
       const blend = Math.min(1, dt * 8);
       built.forEach(function (cabinet) {
         const on = cabinet.spec.id === id;
-        const glow = on ? 3.8 : 2.2;
-        const power = on ? 1.35 : cabinet.lightBase;
+        const glow = on ? 3.6 : 2.2;
         cabinet.neonParts.forEach(function (mat) {
           mat.emissiveIntensity += (glow - mat.emissiveIntensity) * blend;
         });
-        cabinet.light.intensity += (power - cabinet.light.intensity) * blend;
       });
     }
   };

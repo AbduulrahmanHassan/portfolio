@@ -4,59 +4,93 @@ import { buildRoom } from './room.js';
 import { buildMachines } from './machines.js';
 import { createPlayback } from './video.js';
 import { createControls } from './controls.js';
+import { buildContactHub, createContactUi } from './hub.js';
 
 const stage = document.getElementById('stage');
 const cssMount = document.getElementById('css');
 const prompt = document.getElementById('prompt');
 const welcome = document.getElementById('welcome');
+const loader = document.getElementById('loader');
+const loaderMsg = document.getElementById('loader-msg');
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.35));
+const isMobile = matchMedia('(max-width: 900px), (pointer: coarse)').matches;
+const maxDpr = isMobile ? 1.1 : 1.25;
+
+const renderer = new THREE.WebGLRenderer({
+  antialias: !isMobile,
+  alpha: true,
+  powerPreference: 'high-performance'
+});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDpr));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x000000, 0);
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.18;
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMappingExposure = 1.14;
+renderer.shadowMap.enabled = false;
 renderer.domElement.id = 'c';
 stage.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 28);
+const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 26);
 camera.position.set(START.position[0], START.position[1], START.position[2]);
 
 const playback = createPlayback(cssMount);
+const contactUi = createContactUi();
+
 let machines = null;
+let hub = null;
 let controls = null;
 let started = false;
 let last = performance.now();
 let hovered = null;
+let hubHover = false;
 let ready = false;
 
+function setLoader(msg) {
+  if (loaderMsg) loaderMsg.textContent = msg;
+}
+
+function finishLoader() {
+  if (!loader) return;
+  loader.classList.add('hide');
+  setTimeout(function () {
+    if (loader.parentNode) loader.parentNode.removeChild(loader);
+  }, 500);
+}
+
 function boot() {
+  setLoader('Building arcade…');
   const room = buildRoom(scene, renderer);
+  setLoader('Placing machines…');
   machines = buildMachines(scene);
   machines.list.forEach(function (cabinet) {
     playback.attach(cabinet.spec, cabinet.anchor, cabinet.idle);
   });
-  const colliders = room.colliders.concat(machines.colliders);
+  setLoader('Opening contact hub…');
+  hub = buildContactHub(scene);
+  const colliders = room.colliders.concat(machines.colliders, [hub.collider]);
   controls = createControls(camera, renderer.domElement, colliders, room.bounds);
   const dx = START.lookAt[0] - START.position[0];
   const dy = START.lookAt[1] - START.position[1];
   const dz = START.lookAt[2] - START.position[2];
   controls.setLook(Math.atan2(-dx, -dz), Math.atan2(dy, Math.hypot(dx, dz)));
+  contactUi.setOnClose(function () {
+    // Return focus to the room after closing the hub.
+  });
   ready = true;
   window.__arcadeReady = true;
+  finishLoader();
 }
 
 const fontReady = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+setLoader('Loading fonts…');
 fontReady.then(boot).catch(boot);
 
 function pick(clientX, clientY) {
-  if (!ready || !started || playback.active) return null;
+  if (!ready || !started || playback.active || contactUi.open) return null;
   if (controls.locked) {
     pointer.set(0, 0);
   } else if (clientX == null) {
@@ -67,21 +101,42 @@ function pick(clientX, clientY) {
   }
   camera.updateMatrixWorld();
   raycaster.setFromCamera(pointer, camera);
+
+  const hubHits = raycaster.intersectObjects(hub.targets, false);
+  if (hubHits.length) return { type: 'hub' };
+
   const hits = raycaster.intersectObjects(machines.targets, false);
   if (!hits.length) return null;
-  return hits[0].object.userData.machine || null;
+  return { type: 'machine', machine: hits[0].object.userData.machine || null };
 }
 
-function setHover(machine) {
+function setHover(result) {
+  const machine = result && result.type === 'machine' ? result.machine : null;
+  const onHub = !!(result && result.type === 'hub');
   hovered = machine;
-  prompt.hidden = !(machine && !playback.active);
+  hubHover = onHub;
+  hub.setHover(onHub);
+  if (onHub) {
+    prompt.hidden = false;
+    prompt.textContent = 'CLICK FOR CONTACT';
+  } else if (machine && !playback.active) {
+    prompt.hidden = false;
+    prompt.textContent = 'CLICK TO PLAY';
+  } else {
+    prompt.hidden = true;
+  }
 }
 
 renderer.domElement.addEventListener('pointerdown', function (event) {
-  if (!ready || !started || event.button !== 0 || playback.active) return;
-  const machine = pick(event.clientX, event.clientY);
-  if (machine) {
-    playback.play(machine);
+  if (!ready || !started || event.button !== 0 || playback.active || contactUi.open) return;
+  const result = pick(event.clientX, event.clientY);
+  if (result && result.type === 'hub') {
+    contactUi.show();
+    setHover(null);
+    return;
+  }
+  if (result && result.type === 'machine' && result.machine) {
+    playback.play(result.machine);
     setHover(null);
     return;
   }
@@ -89,7 +144,7 @@ renderer.domElement.addEventListener('pointerdown', function (event) {
 });
 
 renderer.domElement.addEventListener('pointermove', function (event) {
-  if (!ready || !started || controls.locked || playback.active) return;
+  if (!ready || !started || controls.locked || playback.active || contactUi.open) return;
   setHover(pick(event.clientX, event.clientY));
 });
 
@@ -102,12 +157,18 @@ document.getElementById('enter').addEventListener('click', function () {
 });
 
 window.addEventListener('keydown', function (event) {
-  if (event.code === 'Escape' && playback.active) playback.stop();
+  if (event.code !== 'Escape') return;
+  if (contactUi.open) {
+    contactUi.hide();
+    return;
+  }
+  if (playback.active) playback.stop();
 });
 
 window.addEventListener('resize', function () {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDpr));
   renderer.setSize(window.innerWidth, window.innerHeight);
   playback.resize();
 });
@@ -120,10 +181,11 @@ function frame(now) {
     renderer.render(scene, camera);
     return;
   }
-  if (started) controls.update(dt);
-  if (playback.active) prompt.hidden = true;
+  if (started && !contactUi.open) controls.update(dt);
+  if (playback.active || contactUi.open) prompt.hidden = true;
   else if (started && controls.locked) setHover(pick(null, null));
-  machines.updateHover(hovered && !playback.active ? hovered.id : null, dt);
+  machines.updateHover(hovered && !playback.active && !contactUi.open ? hovered.id : null, dt);
+  if (!hubHover && !contactUi.open) hub.setHover(false);
   playback.sync();
   playback.render(camera);
   renderer.render(scene, camera);
