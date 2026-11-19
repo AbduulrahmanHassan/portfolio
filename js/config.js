@@ -35,7 +35,7 @@ export const MACHINES = [
     id: '1',
     title: 'HazardFactory',
     vimeoId: '1227963361',
-    hash: '',
+    hash: '8f03c2e299',
     theme: 'factory',
     neon: '#ffb020',
     neonAlt: '#ff6a00',
@@ -51,7 +51,7 @@ export const MACHINES = [
     id: '2',
     title: 'Hazard Hunt',
     vimeoId: '1227963360',
-    hash: '',
+    hash: '90df134283',
     theme: 'hunt',
     neon: '#3ad7ff',
     neonAlt: '#7dffd4',
@@ -67,7 +67,7 @@ export const MACHINES = [
     id: '3',
     title: 'DrivingSim',
     vimeoId: '1227959277',
-    hash: '',
+    hash: '16a0214d34',
     theme: 'drive',
     neon: '#ff7a2f',
     neonAlt: '#2ec8ff',
@@ -83,7 +83,7 @@ export const MACHINES = [
     id: '4',
     title: 'fire fighting',
     vimeoId: '1227961050',
-    hash: '',
+    hash: 'b440cd221d',
     theme: 'fire',
     neon: '#ff3b2f',
     neonAlt: '#ff9a1a',
@@ -105,6 +105,7 @@ export function vimeoSrc(machine, autoplay) {
     autopause: '0',
     playsinline: '1',
     transparent: '0',
+    background: '0',
     autoplay: autoplay ? '1' : '0'
   });
   if (machine.hash) query.set('h', machine.hash);

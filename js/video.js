@@ -36,16 +36,23 @@ export function createPlayback(cssMount) {
     root.className = 'cab-screen is-on';
     root.style.width = (SCREEN.width * SCREEN.pixelsPerMeter) + 'px';
     root.style.height = (SCREEN.height * SCREEN.pixelsPerMeter) + 'px';
-    root.style.pointerEvents = 'none';
+    root.style.pointerEvents = 'auto';
+    root.style.overflow = 'hidden';
+    root.style.background = '#000';
     const iframe = document.createElement('iframe');
-    iframe.title = 'Project video';
-    iframe.allow = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
+    iframe.title = screen.machine.title || 'Project video';
+    iframe.setAttribute(
+      'allow',
+      'autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-write'
+    );
     iframe.allowFullscreen = true;
     iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+    iframe.style.border = '0';
     iframe.style.pointerEvents = 'auto';
     root.appendChild(iframe);
     const object = new CSS3DObject(root);
-    root.style.pointerEvents = 'none';
     object.scale.setScalar(1 / SCREEN.pixelsPerMeter);
     scene.add(object);
     screen.root = root;

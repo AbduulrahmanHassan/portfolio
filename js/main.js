@@ -24,7 +24,8 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.setPixelRatio(maxDpr);
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setClearColor(0x07060c, 1);
+// Keep alpha 0 so CSS3D Vimeo iframes (under the canvas) show through cabinet screens.
+renderer.setClearColor(0x000000, 0);
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.15;
