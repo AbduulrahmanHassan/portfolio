@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { ROOM } from './config.js';
+import { addCeilingFloorDecor } from './decor.js';
 
 function srgb(texture) {
   texture.encoding = THREE.sRGBEncoding;
@@ -262,6 +263,9 @@ export function buildRoom(scene) {
   const backGlow = new THREE.PointLight(0xff4ad8, 0.55, 9, 2);
   backGlow.position.set(0, 2.2, -halfD + 0.8);
   scene.add(backGlow);
+
+  // Additive ceiling + floor decorations only (does not alter existing objects).
+  addCeilingFloorDecor(scene);
 
   return {
     colliders: [
